@@ -7,7 +7,7 @@ Best use case scenario is to use song lyrics file as input of target language.
 
 Here's an example card:
 
-![alt text](https://github.com/saratrajput/AnkiCardCsvCreator/blob/master/images/lyricVocabExample.png)
+![Example Card](https://github.com/saratrajput/AnkiCardCsvCreator/blob/master/images/lyricVocabExample.png)
 
 ### Requirements
 * Linux
