@@ -1,4 +1,12 @@
 #!/usr/bin/python
+"""
+This module reads a txt file (usually made of lyrics) and creates an Anki deck
+in the form of a csv file along with images. The images need to be manually
+copied to the right location.
+
+Author: Suraj Pattar
+"""
+
 from googletrans import Translator # To translate words
 import pandas as pd # To create and csv file of newly formed dictionary
 import nltk # For processing text
