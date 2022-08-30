@@ -6,6 +6,8 @@ copied to the right location.
 Author: Suraj Pattar
 """
 
+import argparse
+import logging
 import os  # To rename image files
 from sys import argv  # For the list of command line arguments passed
 
@@ -17,7 +19,27 @@ from google_images_download import google_images_download
 from googletrans import Translator  # To translate words
 from nltk.tokenize import RegexpTokenizer  # To tokenize words and remove punctuation
 
-script, newLyricFile, known_words_file = argv
+
+# Initialize logging
+log = logging.getLogger(__name__)
+# Add filename='example.log' for logging to file
+logging.basicConfig(level=logging.DEBUG)
+
+
+def argument_parser():
+    """
+    Parse arguments.
+    """
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("input_path", type=str, help="Path to input text file.")
+    parser.add_argument(
+        "--known_words",
+        type=str,
+        default="../data/known_vocab.txt",
+        help="Path to known words.",
+    )
+    return parser.parse_args()
 
 
 def get_unique_words(file_name):
@@ -36,6 +58,7 @@ def get_unique_words(file_name):
 
     # Get unique words
     unique_word_list = list(set(lines_tokenized))
+    log.debug("Unique word list: {}".format(unique_word_list))
 
     return unique_word_list
 
@@ -55,8 +78,10 @@ def translate_words(input_words):
     translated_words = []
     translator = Translator()
     lang = "es"
-    for words in input_words:
-        translated = translator.translate(words, src=lang)
+    for word in input_words:
+        log.debug(word)
+        translated = translator.translate(word, src=lang)
+        log.debug(translated.text)
         translated_words.append(translated.text)
 
     translated_words = [x.lower() for x in translated_words]
@@ -75,15 +100,17 @@ def create_dict_df(new_words, translated_words):
 def download_images(english_words):
     """Download images from translated words"""
 
+    log.info("Downloading images...")
     response = google_images_download.googleimagesdownload()
+    log.debug("Response from download images: {}".format(response))
 
-    for words in english_words:
+    for word in english_words:
         arguments = {
-            "keywords": words,
+            "keywords": word,
             "limit": 1,
             "format": "png",
             "no_directory": "output_directory",
-            "prefix": words,
+            "prefix": word,
         }  # creating list of arguments
         response.download(arguments)  # passing the arguments to the function
 
@@ -118,14 +145,18 @@ def save_to_csv(lyric_df, output_file_name):
     lyric_df.to_csv(output_file_name + ".csv")
 
 
-if __name__ == "__main__":
-
+def main(args):
+    """
+    Implement the main function.
+    """
+    new_lyric_file = args.input_path
+    known_words_file = args.known_words
     # Specify path to images for renaming them later
     img_path = "/home/sp/ankiPython/downloads"
-    output_df = newLyricFile.strip(".txt") + "Vocab"  # Name of output dictionary csv
+    output_file_name = new_lyric_file.strip(".txt") + "Vocab"  # Name of output dictionary csv
 
     # Get unique words from input text file
-    new_words = get_unique_words(newLyricFile)
+    new_words = get_unique_words(new_lyric_file)
     # Create a list of known words
     known_words_list = read_known_words(known_words_file)
 
@@ -146,9 +177,14 @@ if __name__ == "__main__":
     known_words_list = known_words_list + new_unknown_words
 
     # Saves the file to be imported later using Anki desktop
-    save_to_csv(df, output_df)
+    save_to_csv(df, output_file_name)
 
     # Append the new words to the known words file
     with open(known_words_file, "a") as f:
         for item in new_unknown_words:
             f.write("%s\n" % item)
+
+
+if __name__ == "__main__":
+    args = argument_parser()
+    main(args)
